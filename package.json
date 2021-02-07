@@ -21,6 +21,7 @@
     "productName": "Electron Template",
     "linux": {
       "category": "Development",
+      "desktop": { "StartupWMClass": "electron-template" },
       "executableName": "electron-template",
       "target": [
         "AppImage"
