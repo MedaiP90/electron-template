@@ -1,4 +1,6 @@
-const { app, BrowserWindow, Menu } = require("electron");
+const { app, BrowserWindow, Menu } = require('electron');
+
+const userAgent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.131 Safari/537.36';
 
 let win; // Holds the app window
 let splash;
@@ -38,11 +40,11 @@ function createWindow() {
 
   // -----------------------------------------------
   // Create the main window
-
   win = new BrowserWindow({
     width: 1366,
     height: 768,
-    title: 'Electron Template'
+    title: 'Electron Template',
+    icon: 'static/icon.png'
   });
 
   // Use the custom title
@@ -50,7 +52,6 @@ function createWindow() {
   // Closing behavior
   win.on('closed', () => {
     win = null;
-    splash = null;
   });
   // Prevent from spawning new windows
   win.webContents.on('new-window', (event, url) => {
@@ -62,12 +63,12 @@ function createWindow() {
   Menu.setApplicationMenu(Menu.buildFromTemplate(menuTemplate));
 
   // Load main window
-  win.loadURL('https://github.com/MedaiP90/electron-template');
+  win.loadURL('https://github.com/MedaiP90/electron-template', { userAgent });
 
   // Destroy splash screen when ready
-  win.once('ready-to-show', () => {
-    win.show();
-    setTimeout(() => splash.destroy(), 1000);
+  win.webContents.on('did-finish-load', () => {
+    splash.destroy();
+    splash = null;
   });
 
   // Use this for debugging
