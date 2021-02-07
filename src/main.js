@@ -1,5 +1,7 @@
 const { app, BrowserWindow, Menu } = require('electron');
+const Store = require('electron-store');
 
+const store = new Store();
 const userAgent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.131 Safari/537.36';
 
 let win; // Holds the app window
@@ -41,8 +43,8 @@ function createWindow() {
   // -----------------------------------------------
   // Create the main window
   win = new BrowserWindow({
-    width: 1366,
-    height: 768,
+    width: store.get('width') || 1366,
+    height: store.get('height') || 768,
     title: 'Electron Template',
     icon: 'static/icon.png'
   });
@@ -57,6 +59,14 @@ function createWindow() {
   win.webContents.on('new-window', (event, url) => {
     event.preventDefault();
     win.loadURL(url);
+  });
+  // Catch window resizing for storing the information
+  win.on('resize', () => {
+    const size = win.getSize();
+
+    // Save to local storage
+    store.set('width', size[0]);
+    store.set('height', size[1]);
   });
 
   // Build application menu
