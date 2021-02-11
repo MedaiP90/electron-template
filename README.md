@@ -23,7 +23,11 @@ npm run icons
 ### Run the app
 
 ```bash
+# No devTools
 npm run start
+
+# With devTools
+npm run start:dev
 ```
 
 ### Build the app

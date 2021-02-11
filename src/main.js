@@ -1,88 +1,66 @@
 const { app, BrowserWindow, Menu } = require('electron');
-const Store = require('electron-store');
 
-const store = new Store();
-const userAgent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.131 Safari/537.36';
+const AppConfig = require('./utils/config');
+const AppSplash = require('./splash');
+const AppStore = require('./utils/store');
+const AppMethods = require('./utils/methods');
 
 let win; // Holds the app window
-let splash;
-let menuTemplate = [
-  {
-    label: 'File',
-    submenu: [
-      {
-        label: 'Quit',
-        click() {
-          app.quit();
-        }
-      }
-    ]
-  },
-  {
-    label: 'Window',
-    submenu: [
-      {
-        label: 'Reload',
-        role: 'reload'
-      }
-    ]
-  }
-];
 
 function createWindow() {
-  // Create a new splash window 
-  splash = new BrowserWindow({
-    width: 700,
-    height: 500,
-    transparent: false,
-    frame: false,
-    alwaysOnTop: true
-  });
-  splash.loadURL(`file://${__dirname}/splash.html`);
+  AppMethods.clearSession();
 
-  // -----------------------------------------------
+  // Create a new splash window 
+  AppSplash.present();
+
   // Create the main window
   win = new BrowserWindow({
-    width: store.get('width') || 1366,
-    height: store.get('height') || 768,
+    width: AppStore.getWidth() || 1366,
+    height: AppStore.getHeight() || 768,
     title: 'Electron Template',
-    icon: 'static/icon.png'
+    icon: 'static/icon.png',
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: true
+    }
   });
 
   // Use the custom title
   win.on('page-title-updated', event => event.preventDefault());
   // Closing behavior
   win.on('closed', () => {
+    AppSplash.dismiss();
     win = null;
   });
   // Prevent from spawning new windows
   win.webContents.on('new-window', (event, url) => {
     event.preventDefault();
-    win.loadURL(url);
+    AppMethods.loadUrlWithUserAgent(win, url);
   });
   // Catch window resizing for storing the information
   win.on('resize', () => {
     const size = win.getSize();
 
     // Save to local storage
-    store.set('width', size[0]);
-    store.set('height', size[1]);
+    AppStore.saveWidth(size[0]);
+    AppStore.saveHeight(size[1]);
+  });
+  // App content is loaded
+  win.webContents.on('did-finish-load', () => {
+    // Destroy splash screen
+    AppSplash.dismiss();
   });
 
   // Build application menu
-  Menu.setApplicationMenu(Menu.buildFromTemplate(menuTemplate));
+  Menu.setApplicationMenu(Menu.buildFromTemplate(AppConfig.MENUS.default));
 
   // Load main window
-  win.loadURL('https://github.com/MedaiP90/electron-template', { userAgent });
-
-  // Destroy splash screen when ready
-  win.webContents.on('did-finish-load', () => {
-    splash.destroy();
-    splash = null;
-  });
+  AppMethods.loadUrlWithUserAgent(win, AppConfig.URLS.default);
 
   // Use this for debugging
-  // win.webContents.openDevTools();
+  if (process.env.NODE_ENV == 'dev') {
+    win.webContents.openDevTools();
+  }
 }
 
 // Create window when app is ready
